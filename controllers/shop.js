@@ -43,32 +43,53 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  Cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      products.forEach((product) => {
-        cartProductData = cart.products.find((prod) => prod.id === product.id);
+  const user = req.user;
 
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      });
-      console.log(cartProducts);
+  user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts();
+    })
+    .then((products) =>
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
-        products: cartProducts,
-      });
+        products: products,
+      })
+    )
+    .catch((err) => {
+      console.log(err);
     });
-  });
 };
 
 exports.postCart = (req, res, next) => {
-  const productId = req.body.productId;
-  Product.findById(productId, (product) => {
-    Cart.addProduct(productId, product.price);
-  });
-  res.redirect('/cart');
+  const id = req.body.productId;
+  const user = req.user;
+  let quantity = 1;
+  let cartCopy;
+
+  Product.findByPk(id)
+    .then((product) => {
+      user
+        .getCart()
+        .then((cart) => {
+          cartCopy = cart;
+          return cart.getProducts(
+            { where: { id } },
+            { joinTableAttributes: ['quantity'] }
+          );
+        })
+        .then((products) => {
+          if (products.length > 0) {
+            quantity = products[0].cartItem.quantity + 1;
+          }
+          cartCopy.addProduct(product, { through: { quantity } });
+          res.redirect('/');
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.postDeleteProduct = (req, res, next) => {

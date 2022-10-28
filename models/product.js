@@ -2,21 +2,32 @@ const { ObjectId } = require('mongodb');
 const { getDb } = require('../util/database');
 
 class Product {
-  constructor(title, price, description, imageUrl) {
+  constructor(title, price, description, imageUrl, userId, id) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
+    this.userId = userId;
+    this._id = id ? new ObjectId(id) : null;
   }
 
   save() {
     const db = getDb();
+    let dbOp;
 
-    return db
-      .collection('products')
-      .insertOne(this)
-      .then((result) => console.log(result))
-      .catch((err) => console.log(err));
+    if (this._id) {
+      const _id = this._id;
+      dbOp = db.collection('products').updateOne(
+        { _id },
+        {
+          $set: this,
+        }
+      );
+    } else {
+      dbOp = db.collection('products').insertOne(this);
+    }
+
+    return dbOp.then((result) => result).catch((err) => console.log(err));
   }
 
   static fecthAll() {
@@ -38,6 +49,16 @@ class Product {
       .collection('products')
       .findOne({ _id })
       .then((product) => product)
+      .catch((err) => console.log(err));
+  }
+
+  static deleteById(id) {
+    const _id = new ObjectId(id);
+    const db = getDb();
+    return db
+      .collection('products')
+      .deleteOne({ _id })
+      .then((deleted) => deleted)
       .catch((err) => console.log(err));
   }
 }

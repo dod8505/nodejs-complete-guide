@@ -53,12 +53,14 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
+  const userId = req.user._id;
 
   const product = new Product(
     updatedTitle,
     updatedPrice,
     updatedDesc,
     updatedImageUrl,
+    userId,
     productId
   );
 

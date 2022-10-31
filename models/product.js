@@ -17,6 +17,7 @@ class Product {
 
     if (this._id) {
       const _id = this._id;
+
       dbOp = db.collection('products').updateOne(
         { _id },
         {

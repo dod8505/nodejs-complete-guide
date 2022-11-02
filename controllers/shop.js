@@ -46,9 +46,6 @@ exports.getCart = (req, res, next) => {
 
   user
     .getCart()
-    .then((cart) => {
-      return cart.getProducts();
-    })
     .then((products) => {
       res.render('shop/cart', {
         path: '/cart',
@@ -71,31 +68,6 @@ exports.postCart = (req, res, next) => {
       res.redirect('/cart');
     })
     .catch((err) => console.log(err));
-  // let quantity = 1;
-  // let cartCopy;
-
-  // Product.findByPk(id)
-  //   .then((product) => {
-  //     user
-  //       .getCart()
-  //       .then((cart) => {
-  //         cartCopy = cart;
-  //         return cart.getProducts(
-  //           { where: { id } },
-  //           { joinTableAttributes: ['quantity'] }
-  //         );
-  //       })
-  //       .then((products) => {
-  //         if (products.length > 0) {
-  //           quantity = products[0].cartItem.quantity + 1;
-  //         }
-  //         cartCopy.addProduct(product, { through: { quantity } });
-  //         res.redirect('/cart');
-  //       });
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
 };
 
 exports.postDeleteProduct = (req, res, next) => {
@@ -103,12 +75,7 @@ exports.postDeleteProduct = (req, res, next) => {
   const user = req.user;
 
   user
-    .getCart()
-    .then((cart) => cart.getProducts({ where: { id } }))
-    .then((products) => {
-      const product = products[0];
-      product.cartItem.destroy();
-    })
+    .deleteItemFromCart(id)
     .then(() => res.redirect('/cart'))
     .catch((err) => {
       console.log(err);

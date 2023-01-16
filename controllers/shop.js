@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const Order = require('../models/order');
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -7,6 +8,7 @@ exports.getProducts = (req, res, next) => {
         prods: products,
         pageTitle: 'All Products',
         path: '/products',
+        isAuthenticated: req.isLoggedIn,
       })
     )
     .catch((err) => {
@@ -22,6 +24,7 @@ exports.getProduct = (req, res, next) => {
         product,
         pageTitle: 'Shop',
         path: '/products',
+        isAuthenticated: req.isLoggedIn,
       })
     )
     .catch((err) => console.log(err));
@@ -34,6 +37,7 @@ exports.getIndex = (req, res, next) => {
         prods: products,
         pageTitle: 'Shop',
         path: '/',
+        isAuthenticated: req.isLoggedIn,
       })
     )
     .catch((err) => {
@@ -58,6 +62,7 @@ exports.getCart = (req, res, next) => {
         path: '/cart',
         pageTitle: 'Your Cart',
         products: products,
+        isAuthenticated: req.isLoggedIn,
       })
     )
     .catch((err) => console.log(err));
@@ -89,9 +94,24 @@ exports.postDeleteProduct = (req, res, next) => {
 
 exports.postOrder = (req, res, next) => {
   const user = req.user;
-
+  const userId = user._id;
   user
-    .addOrder()
+    .populate('cart.items.productId', ['_id', 'title', 'quantity'])
+    .then((user) => user.cart.items)
+    .then((productsPopulates) =>
+      productsPopulates.map((product) => ({
+        product: {
+          _id: product.productId,
+          title: product.productId.title,
+        },
+        quantity: product.quantity,
+      }))
+    )
+    .then((products) => {
+      const order = new Order({ products, userId });
+      return order.save();
+    })
+    .then(() => user.cleanCart())
     .then(() => res.redirect('/orders'))
     .catch((err) => {
       console.log(err);
@@ -99,15 +119,13 @@ exports.postOrder = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-  const user = req.user;
-
-  user
-    .getOrders()
+  Order.find({ userId: req.user._id })
     .then((orders) =>
       res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',
         orders,
+        isAuthenticated: req.isLoggedIn,
       })
     )
     .catch((err) => {

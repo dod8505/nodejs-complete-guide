@@ -10,7 +10,7 @@ const errorController = require('./controllers/error');
 const User = require('./models/user');
 
 const MONGODB_URI =
-  'mongodb+srv://user-application:_Developer_85_@clusterpractices.seodmo3.mongodb.net/shop?w=majority';
+  'mongodb+srv://user-application:pass@clusterpractices.seodmo3.mongodb.net/shop?w=majority';
 
 const app = express();
 const store = new MogoDBStore({ uri: MONGODB_URI, collection: 'sessions' });

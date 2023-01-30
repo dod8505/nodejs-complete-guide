@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MogoDBStore = require('connect-mongodb-session')(session);
 const csurf = require('csurf');
+const flash = require('connect-flash');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -35,6 +36,7 @@ app.use(
   })
 );
 app.use(csrf);
+app.use(flash());
 
 app.use((req, res, next) => {
   if (!req.session.user) {
